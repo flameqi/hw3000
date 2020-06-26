@@ -2,5 +2,5 @@
     "port": "COM18",
     "board": "arduino:avr:uno",
     "programmer": "ArduinoISP",
-    "sketch": "spi_test_r.ino"
+    "sketch": "payload_r.ino"
 }

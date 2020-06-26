@@ -1,6 +1,6 @@
 {
-    "port": "COM18",
+    "port": "COM19",
     "board": "arduino:avr:uno",
-    "programmer": "ArduinoISP",
-    "sketch": "spi_test_r.ino"
+    "programmer": "AVR ISP",
+    "sketch": "payload_s.ino"
 }
