@@ -26,7 +26,7 @@ typedef enum
 
   RFLR_STATE_SLEEP,
 } tRFLRStates;
-bool  EnableMaster = false;    //主从选择  true 为主  false 为从
+bool  EnableMaster = true;    //主从选择  true 为主  false 为从
 
 static uint16_t TickCounter;
 
