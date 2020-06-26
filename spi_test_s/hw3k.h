@@ -110,7 +110,6 @@ class hw {
     uint16_t regBuff;
     state_t _state;
     mode_t _mode;
-    data_t data;
   protected:
     /**
        SPI transactions

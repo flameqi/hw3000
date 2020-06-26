@@ -758,7 +758,6 @@ int8_t hw::frame_tx(mode_t mode, data_t *txbuf)
     write_reg(TRCTRL, 0x0100);   //tx_enable
     write_reg(FIFOSTA, 0x0100); //flush fifo
     write_fifo(FIFODATA, txbuf->data, txbuf->len); //write fifo
-
     write_reg(FIFOCTRL, 0x0001); //ocpy = 1
     // IF_SERIAL_DEBUG(printf("frame_tx->txbuf.data= %s len= %i\r\n", txbuf->data, txbuf->len));
   
@@ -844,7 +843,7 @@ int8_t hw::rx_task(data_t *_data_buf)
 
   if (_state != RX)
   {
-    _gpio1_request = 0;
+    //_gpio1_request = 0;
     return -2;
   }
 
@@ -853,7 +852,7 @@ int8_t hw::rx_task(data_t *_data_buf)
     len = _data_buf->data[0] - 2;
     crc = cal_crc_ccitt( _data_buf->data, len);
     reg =  _data_buf->data[len] * 256 + _data_buf->data[len + 1];
-  IF_SERIAL_DEBUG(printf("on salve rx_task:%i.......................................==\r\n",len));
+  IF_SERIAL_DEBUG(printf("on rx_task:%i   data:%s.......................................==\r\n",len,_data_buf->data));
     if (crc == reg)
     {
       return 0;
