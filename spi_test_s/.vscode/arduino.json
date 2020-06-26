@@ -1,5 +1,6 @@
 {
-    "board": "arduino:avr:uno",
     "port": "COM7",
+    "board": "arduino:avr:uno",
+    "programmer": "AVR ISP",
     "sketch": "spi_test_s.ino"
 }
