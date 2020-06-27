@@ -6,10 +6,12 @@ hw hw(10, 8, 2);
 data_t _data_buf_t, _data_buf_r;
 mode_t mode;
 bool role = false;
+bool rxok=false;
 static uint16_t TickCounter;
-
-uint8_t PingMsg[] = "PINGG";
-uint8_t PongMsg[] = "PONG";
+unsigned long time;
+uint8_t thisName[]="one";
+uint8_t PingMsg[];
+uint8_t PongMsg[];
 
 void setup()
 {
@@ -32,26 +34,29 @@ void setup()
   //attachInterrupt(0, intrrupt, RISING);
   hw.init(mode);
 }
-void copystr(uint8_t *res, data_t *tar, uint8_t len)
+void coding(uint8_t *res, data_t *tar, uint8_t len)
 {
   if (len > 252)
     return;
-  tar->len = len;
+  tar->len = len+3;
   tar->data[0] = tar->len;
 
-  for (int i = 0; i < tar->len; i++)
+  for (int i = 0; i < (tar->len-3); i++)
   {
     tar->data[i + 1] = res[i];
   }
-
-  res[3] = 'p';
+}
+void decoding(data_t *res , uint8_t *tar){
+  for(int i=0; i<res->len-3;i++){
+    tar[i]=res->data[i+1];
+  }
 }
 
 void loop()
 {
 
   // put your main code here, to run repeatedly:
-  copystr(PingMsg, &_data_buf_t, sizeof(PingMsg));
+  coding(PingMsg, &_data_buf_t, sizeof(PingMsg));
   // printf("data:%s,,,,res:%s,,,,,,,len:%i\r\n", _data_buf_t.data, PingMsg, _data_buf_t.len);
 
   if (role)
@@ -71,11 +76,22 @@ void loop()
     {
       if (hw.rx_task(&_data_buf_r) == 0)
       {
-        printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
+        rxok=true;
+        //printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
       }
       else{
-        printf("rx_failed!!!\r\n");
+        rxok=false;
+        //printf("rx_failed!!!\r\n");
       }
     }
+    else{rxok=false;}
+  }
+  if (rxok){
+    decoding(&_data_buf_r,PongMsg);
+    time=PongMsg[0];
+    time=time|((unsigned long )PongMsg[1]<<8);
+    time=time|((unsigned long )PongMsg[2]<<16);
+    time=time|((unsigned long )PongMsg[3]<<24);
+    printf("rx_time:%ld,,p0=%x,p1=%x,p2=%x,p3=%x,\r\n",time,PongMsg[0],PongMsg[1],PongMsg[2],PongMsg[3]);
   }
 }

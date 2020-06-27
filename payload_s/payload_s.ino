@@ -7,9 +7,9 @@ data_t _data_buf_t, _data_buf_r;
 mode_t mode;
 bool role = true;
 static uint16_t TickCounter;
-
-uint8_t PingMsg[] = "PINGG";
-uint8_t PongMsg[] = "PONG";
+unsigned long time;
+uint8_t PingMsg[4];
+uint8_t PongMsg[4];
 
 void setup()
 {
@@ -32,26 +32,44 @@ void setup()
   //attachInterrupt(0, intrrupt, RISING);
   hw.init(mode);
 }
-void copystr(uint8_t *res, data_t *tar, uint8_t len)
+void coding(uint8_t *res, data_t *tar, uint8_t len)
 {
   if (len > 252)
     return;
-  tar->len = len;
+  tar->len = len+3;
   tar->data[0] = tar->len;
 
-  for (int i = 0; i < tar->len; i++)
+  for (int i = 0; i < (tar->len-3); i++)
   {
     tar->data[i + 1] = res[i];
   }
-
-  res[3] = 'p';
 }
-
+void decoding(data_t *res , uint8_t *tar){
+  for(int i=0; i<res->len-3;i++){
+    tar[i]=res->data[i+1];
+  }
+}
 void loop()
 {
 
   // put your main code here, to run repeatedly:
-  copystr(PingMsg, &_data_buf_t, sizeof(PingMsg));
+  time=micros();
+/*  int bit = 24;
+  for (int i = 3; i >= 0; i--)
+  {
+    unsigned long temp = time << bit;
+    PingMsg[i] = temp >> 24;
+    bit -= 8;
+  }*/
+  PingMsg[0]=time;
+  PingMsg[1]=time>>8;
+  PingMsg[2]=time>>16;
+  PingMsg[3]=time>>24;
+  //time=PingMsg[0];
+  //time=time|((unsigned long )PingMsg[1]<<8);
+  //time=time|((unsigned long )PingMsg[2]<<16);
+  //time=time|((unsigned long )PingMsg[3]<<32);
+  coding(PingMsg, &_data_buf_t, sizeof(PingMsg));
   // printf("data:%s,,,,res:%s,,,,,,,len:%i\r\n", _data_buf_t.data, PingMsg, _data_buf_t.len);
 
   if (role)
@@ -60,7 +78,7 @@ void loop()
     delayMicroseconds(1);
     if (hw.tx_data(mode, &_data_buf_t) == 0)
     {
-      printf("sened!!\r\n");
+      printf("sened:%ld,p0:%x,p1:%x,p2:%x,p3:%x\r\n",time,PingMsg[0],PingMsg[1],PingMsg[2],PingMsg[3]);
     }
   }
   else
