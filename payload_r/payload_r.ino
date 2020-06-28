@@ -1,17 +1,16 @@
 #include "hw3k_config.h"
 #include "hw3k.h"
 #include "printf.h"
-
+#define LEN 6
 hw hw(10, 8, 2);
 data_t _data_buf_t, _data_buf_r;
 mode_t mode;
 bool role = false;
-bool rxok=false;
 static uint16_t TickCounter;
-unsigned long time;
-uint8_t thisName[]="one";
-uint8_t PingMsg[];
-uint8_t PongMsg[];
+unsigned long time, time_tx;
+uint16_t ID = 0x0003, ID_r;
+uint8_t PingMsg[LEN];
+uint8_t PongMsg[LEN];
 
 void setup()
 {
@@ -38,34 +37,43 @@ void coding(uint8_t *res, data_t *tar, uint8_t len)
 {
   if (len > 252)
     return;
-  tar->len = len+3;
+  tar->len = len + 3;
   tar->data[0] = tar->len;
 
-  for (int i = 0; i < (tar->len-3); i++)
+  for (int i = 0; i < (tar->len - 3); i++)
   {
     tar->data[i + 1] = res[i];
   }
 }
-void decoding(data_t *res , uint8_t *tar){
-  for(int i=0; i<res->len-3;i++){
-    tar[i]=res->data[i+1];
+void decoding(data_t *res, uint8_t *tar)
+{
+  for (int i = 0; i < res->len - 3; i++)
+  {
+    tar[i] = res->data[i + 1];
   }
 }
 
 void loop()
 {
 
+  time = micros();
   // put your main code here, to run repeatedly:
   coding(PingMsg, &_data_buf_t, sizeof(PingMsg));
   // printf("data:%s,,,,res:%s,,,,,,,len:%i\r\n", _data_buf_t.data, PingMsg, _data_buf_t.len);
-
+  PingMsg[5] = time;
+  PingMsg[4] = time >> 8;
+  PingMsg[3] = time >> 16;
+  PingMsg[2] = time >> 24;
+  PingMsg[1] = ID;
+  PingMsg[0] = ID >> 8;
   if (role)
   {
     hw.rx_disable();
     delayMicroseconds(1);
     if (hw.tx_data(mode, &_data_buf_t) == 0)
     {
-      printf("sened!!");
+      //printf("sened!! ID_R:%x,sened:%ld\r\n", ID, time);
+      role = !role;
     }
   }
   else
@@ -76,22 +84,21 @@ void loop()
     {
       if (hw.rx_task(&_data_buf_r) == 0)
       {
-        rxok=true;
+
+        decoding(&_data_buf_r, PongMsg);
+        ID_r = PongMsg[0] << 8 | PongMsg[1];
+        time_tx = PongMsg[5];
+        time_tx = time_tx | ((unsigned long)PongMsg[4] << 8);
+        time_tx = time_tx | ((unsigned long)PongMsg[3] << 16);
+        time_tx = time_tx | ((unsigned long)PongMsg[2] << 24);
+        
+        if (ID_r == ID)
+        {printf("ID:%x,rx_time:%ld\r\n", ID_r, time_tx);
+          role = !role;
+        }
         //printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
       }
-      else{
-        rxok=false;
-        //printf("rx_failed!!!\r\n");
-      }
     }
-    else{rxok=false;}
-  }
-  if (rxok){
-    decoding(&_data_buf_r,PongMsg);
-    time=PongMsg[0];
-    time=time|((unsigned long )PongMsg[1]<<8);
-    time=time|((unsigned long )PongMsg[2]<<16);
-    time=time|((unsigned long )PongMsg[3]<<24);
-    printf("rx_time:%ld,,p0=%x,p1=%x,p2=%x,p3=%x,\r\n",time,PongMsg[0],PongMsg[1],PongMsg[2],PongMsg[3]);
   }
 }
+
