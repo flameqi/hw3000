@@ -35,7 +35,7 @@ void setup()
   mode.lp_enable = DISABLE;
   //attachInterrupt(0, intrrupt, RISING);
   hw.init(mode);
-  MsTimer2::set(500, nextID); // 中断设置函数，每 500ms 进入一次中断
+  MsTimer2::set(100, nextID); // 中断设置函数，每 500ms 进入一次中断
   MsTimer2::start();
 }
 void nextID()
@@ -96,8 +96,9 @@ void loop()
     hw.rx_disable();
     delayMicroseconds(1);
     if (hw.tx_data(mode, &_data_buf_t) == 0)
-    {
+    {delayMicroseconds(2);
       role = !role;
+      //printf("I sended to ID:%x\r\n",ID_r);
       
     }
   }
@@ -117,7 +118,7 @@ void loop()
         time_rx = time_rx | ((unsigned long)PongMsg[4] << 8);
         time_rx = time_rx | ((unsigned long)PongMsg[3] << 16);
         time_rx = time_rx | ((unsigned long)PongMsg[2] << 24);
-        printf("ID:%x,rx_time:%ld\r\n", ID, time_rx);
+        printf("I receive ID:%x,receive time:%ld\r\n", ID, time_rx);
   
       }
     }

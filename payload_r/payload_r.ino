@@ -8,7 +8,7 @@ mode_t mode;
 bool role = false;
 static uint16_t TickCounter;
 unsigned long time, time_tx;
-uint16_t ID = 0x0003, ID_r;
+uint16_t ID = 0x0001, ID_r;
 uint8_t PingMsg[LEN];
 uint8_t PongMsg[LEN];
 
@@ -72,7 +72,7 @@ void loop()
     delayMicroseconds(1);
     if (hw.tx_data(mode, &_data_buf_t) == 0)
     {
-      //printf("sened!! ID_R:%x,sened:%ld\r\n", ID, time);
+      printf("I sened!! my ID_R:%x,sened_data:%ld\r\n", ID, time);
       role = !role;
     }
   }
@@ -93,7 +93,7 @@ void loop()
         time_tx = time_tx | ((unsigned long)PongMsg[2] << 24);
         
         if (ID_r == ID)
-        {printf("ID:%x,rx_time:%ld\r\n", ID_r, time_tx);
+        {printf("hit me myID:%x,rx_time:%ld\r\n", ID_r, time_tx);
           role = !role;
         }
         //printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
