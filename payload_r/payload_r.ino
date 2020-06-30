@@ -5,7 +5,7 @@
 hw hw(10, 8, 2);
 data_t _data_buf_t, _data_buf_r;
 mode_t mode;
-bool role = false;
+
 static uint16_t TickCounter;
 unsigned long time, time_tx;
 uint16_t ID = 0x0001, ID_r;
@@ -66,39 +66,36 @@ void loop()
   PingMsg[2] = time >> 24;
   PingMsg[1] = ID;
   PingMsg[0] = ID >> 8;
-  if (role)
-  {
-    hw.rx_disable();
-    delayMicroseconds(1);
-    if (hw.tx_data(mode, &_data_buf_t) == 0)
+  //hw.rx_disable();
+  hw.rx_enable();
+  delayMicroseconds(1);
+  while (1)
+  {if (hw.rx_avalible()){break;}}
+  
+    if (hw.rx_task(&_data_buf_r) == 0)
     {
-      printf("I sened!! my ID_R:%x,sened_data:%ld\r\n", ID, time);
-      role = !role;
-    }
-  }
-  else
-  {
-    hw.rx_enable();
-    delayMicroseconds(1);
-    if (hw.rx_avalible())
-    {
-      if (hw.rx_task(&_data_buf_r) == 0)
+
+      decoding(&_data_buf_r, PongMsg);
+      ID_r = PongMsg[0] << 8 | PongMsg[1];
+      time_tx = PongMsg[5];
+      time_tx = time_tx | ((unsigned long)PongMsg[4] << 8);
+      time_tx = time_tx | ((unsigned long)PongMsg[3] << 16);
+      time_tx = time_tx | ((unsigned long)PongMsg[2] << 24);
+
+      if (ID_r == ID)
       {
-
-        decoding(&_data_buf_r, PongMsg);
-        ID_r = PongMsg[0] << 8 | PongMsg[1];
-        time_tx = PongMsg[5];
-        time_tx = time_tx | ((unsigned long)PongMsg[4] << 8);
-        time_tx = time_tx | ((unsigned long)PongMsg[3] << 16);
-        time_tx = time_tx | ((unsigned long)PongMsg[2] << 24);
+        printf("hit me myID:%x,rx_time:%ld\r\n", ID_r, time_tx);
         
-        if (ID_r == ID)
-        {printf("hit me myID:%x,rx_time:%ld\r\n", ID_r, time_tx);
-          role = !role;
-        }
-        //printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
-      }
-    }
-  }
-}
 
+        hw.rx_disable();
+        delayMicroseconds(1);
+        if (hw.tx_data(mode, &_data_buf_t) == 0)
+        {
+          printf("I sened!! my ID_R:%x,sened_data:%ld\r\n", ID, time);
+        
+        }
+      }
+      //printf("rx_data:%s len:%i\r\n", _data_buf_r.data,_data_buf_r.len);
+    }
+  
+}
