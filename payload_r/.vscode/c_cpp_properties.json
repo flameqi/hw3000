@@ -3,6 +3,10 @@
         {
             "name": "Win32",
             "includePath": [
+                "D:\\我的文档\\Arduino\\libraries\\SimpleDHT",
+                "D:\\我的文档\\Arduino\\libraries\\SDHT",
+                "D:\\我的文档\\Arduino\\libraries\\Adafruit_Fingerprint_Sensor_Library",
+                "D:\\我的文档\\Arduino\\libraries\\DHT_sensor_library",
                 "C:\\Users\\Administrator\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
                 "C:\\Users\\Administrator\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.2\\**"
             ],

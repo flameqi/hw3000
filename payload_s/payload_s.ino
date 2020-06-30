@@ -1,9 +1,10 @@
 #include "hw3k_config.h"
 #include "hw3k.h"
 #include "printf.h"
+#include "fun.h"
 #include <MsTimer2.h>
 #define RERX 600
-#define LEN 6
+#define LEN 10
 hw hw(10, 8, 2);
 data_t _data_buf_t, _data_buf_r;
 mode_t mode;
@@ -15,6 +16,7 @@ uint16_t ID;
 int idIndex = 0, tick = 0;
 uint8_t PingMsg[LEN];
 uint8_t PongMsg[LEN];
+int switchb = 1;
 
 void setup()
 {
@@ -35,11 +37,22 @@ void setup()
   mode.ack_mode = DISABLE;
   mode.lp_enable = DISABLE;
   //attachInterrupt(0, intrrupt, RISING);
+  
   hw.init(mode);
-  // MsTimer2::set(100, nextID); // 中断设置函数，每 500ms 进入一次中断
-  // MsTimer2::start();
+  MsTimer2::set(5000, switchblink); // 中断设置函数，每 500ms 进入一次中断
+  MsTimer2::start();
 }
-
+void switchblink()
+{
+  if (switchb == 0)
+  {
+   switchb= 1;
+  }
+  else
+  {
+    switchb =0;
+  }
+}
 void coding(uint8_t *res, data_t *tar, uint8_t len)
 {
   if (len > 252)
@@ -83,16 +96,17 @@ void loop()
   PingMsg[2] = time >> 24;
   PingMsg[1] = IDTable[idIndex];
   PingMsg[0] = IDTable[idIndex] >> 8;
-
+  PingMsg[8]=switchb;
   coding(PingMsg, &_data_buf_t, sizeof(PingMsg));
   hw.rx_disable();
   //delayMicroseconds(10);
   if (hw.tx_data(mode, &_data_buf_t) == 0)
   {
     //delayMicroseconds(2);
-
-    printf("I sended to ID:%x,tx_time:%ld\r\n", IDTable[idIndex], time);
+    //printf("\r\n");
+    //printf("id:%x,tx_time:%ld\r\n", IDTable[idIndex], time);
     // hw.rx_disable();
+    //printf("...........................................pingmsg8:%d\r\n",PingMsg[8]);
     hw.rx_enable();
     delayMicroseconds(1);
     while (1)
@@ -114,7 +128,7 @@ void loop()
       //
       tick++;
     }
-//printf("..........................tick:%i\r\n", tick);
+    //printf("..........................tick:%i\r\n", tick);
     if (tick <= 1)
     {
       if (hw.rx_task(&_data_buf_r) == 0)
@@ -127,10 +141,14 @@ void loop()
         time_rx = time_rx | ((unsigned long)PongMsg[3] << 16);
         time_rx = time_rx | ((unsigned long)PongMsg[2] << 24);
         printf("I receive ID:%x,receive time:%ld\r\n", ID, time_rx);
+        if (ID == 0x0003)
+        {
+
+          printf(".......light:%d,temperature:%d,humidity:%d\r\n", PongMsg[8], PongMsg[6], PongMsg[7]);
+        }
         //idIndex++;
       }
     }
-    
   }
   idIndex++;
 }
